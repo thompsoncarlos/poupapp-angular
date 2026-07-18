@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, computed, signal } from '@angular/core';
 import { SaldoComponent } from './saldo/saldo.component';
 import { TransacoesComponent } from './transacoes/transacoes.component';
 import { ContasComponent } from './contas/contas.component';
@@ -18,9 +18,9 @@ import { DestaqueValorNumericoDirective } from '../compartilhados/detaque-valor-
   styleUrl: './area-financeira.component.css',
 })
 export class AreaFinanceiraComponent {
-  saldo = 30;
+  saldo = -30;
 
-  transacoes: Transacao[] = [
+  transacoes = signal<Transacao[]>([
     {
       id: '5',
       nome: '',
@@ -61,20 +61,27 @@ export class AreaFinanceiraComponent {
       data: new Date('2024-10-01T00:00'),
       conta: 'Anybank',
     },
-  ];
+  ]);
 
-  contas: Conta[] = [
-    {
-      nome: 'Anybank',
-      saldo: 1000,
-    },
-    {
-      nome: 'Bytebank',
-      saldo: 0,
-    },
-    {
-      nome: 'Switch Bank',
-      saldo: 0,
-    },
-  ];
+  contasComSaldoInicial = signal<Conta[]>([]);
+
+  contas = computed(() => {
+    return this.contasComSaldoInicial().map((conta) => {
+      const saldoAtualizado = this.calculaSaldoAtualizado(conta);
+
+      return { ...conta, saldo: saldoAtualizado };
+    });
+  });
+
+  calculaSaldoAtualizado(conta: Conta) {
+    return conta.saldo + 20;
+  }
+
+  processarTransacao(transacao: Transacao) {
+    this.transacoes.update((transacoes) => [transacao, ...transacoes]);
+  }
+
+  adicionarConta(conta: Conta) {
+    this.contasComSaldoInicial.update((contas) => [...contas, conta]);
+  }
 }
